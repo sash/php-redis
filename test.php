@@ -1,7 +1,7 @@
 <?php
-include 'Php5Redis.php';
-$redis = new Php5Redis();
-$redis->debug=1;
+include 'Redis.php';
+$redis = new Redis();
+$redis->debug=true;
 $redis->nonempty='abv';
 $redis->empty='';
 var_dump($redis->empty);

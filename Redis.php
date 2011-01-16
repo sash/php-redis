@@ -1,6 +1,6 @@
 <?php
-class Php5RedisException extends Exception {}
-class Php5Redis {
+class RedisException extends Exception {}
+class Redis {
 	private $port;
 	private $host;
 	private $_sock;
@@ -22,10 +22,10 @@ class Php5Redis {
 		$msg = "Cannot open socket to {$this->host}:{$this->port}";
 		if ($errno || $errmsg)
 			$msg .= "," . ($errno ? " error $errno" : "") . ($errmsg ? " $errmsg" : "");
-		throw new Php5RedisException ( "$msg." );
+		throw new RedisException ( "$msg." );
 	}
 	private function debug($msg){
-		if ($this->debug) echo sprintf("[Php5Redis] %s\n", $msg);
+		if ($this->debug) echo sprintf("[Redis] %s\n", $msg);
 	}
 	
 	private function read($len = 1024) {
@@ -34,14 +34,14 @@ class Php5Redis {
 			return $s;
 		}
 		$this->disconnect ();
-		throw new Php5RedisException ( "Cannot read from socket." );
+		throw new RedisException ( "Cannot read from socket." );
 	}
 	private function cmdResponse() {
 		// Read the response
 		$s = trim ( $this->read () );
 		switch ($s [0]) {
 			case '-' : // Error message
-				throw new Php5RedisException ( substr ( $s, 1 ) );
+				throw new RedisException ( substr ( $s, 1 ) );
 				break;
 			case '+' : // Single line response
 				return substr ( $s, 1 );
@@ -76,7 +76,7 @@ class Php5Redis {
 				return $res;
 				break;
 			default :
-				throw new Php5RedisException ( 'Unknown responce line: ' . $s );
+				throw new RedisException ( 'Unknown responce line: ' . $s );
 				break;
 		}
 	}
