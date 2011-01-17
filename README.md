@@ -4,14 +4,14 @@ php-redis contains php5 class for conenction with redis database with methods fo
 
 Quick start
 -----------
-* Install Redis 1.0 or later: http://code.google.com/p/redis/
+* Install Redis from [redis.io](http://redis.io/download "Redis")
 
 		tar -xvf redis-1.0.tar.gz
 		cd redis-1.0
 		make
 		./redis-server redis.conf
 
-* Download latest php5-redis platform from here: http://code.google.com/p/php5-redis/downloads/list
+* Download latest php-redis class from [here](https://github.com/sash/php-redis/archives/master)
 * Write some code:
 
 		# Connecting
