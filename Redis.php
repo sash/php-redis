@@ -5,7 +5,7 @@ class RedisException extends Exception {}
  * 
  * @author sash
  * @license LGPL
- * @version 1.1
+ * @version 1.2
  */
 class Redis {
 	private $port;
@@ -87,6 +87,20 @@ class Redis {
 				break;
 		}
 	}
+	private $pipeline = false;
+	private $pipeline_commands = 0;
+	function pipeline_begin(){
+		$this->pipeline = true;
+		$this->pipeline_commands = 0;
+	}
+	function pipeline_responses(){
+		$response = array();
+		for ($i=0;$i<$this->pipeline_commands;$i++){
+			$response[] = $this->cmdResponse();
+		}
+		$this->pipeline = false;
+		return $response;
+	}
 	private function cmd($command) {
 		$this->debug('Command: '.(is_array($command)?join(', ',$command):$command));
 		$this->connect ();
@@ -109,7 +123,13 @@ class Redis {
 				break;
 			$s = substr ( $s, $i );
 		}
-		return $this->cmdResponse ();
+		if ($this->pipeline){
+			$this->pipeline_commands++;
+			return null;
+		}
+		else{
+			return $this->cmdResponse ();
+		}
 	}
 	function disconnect() {
 		if ($this->_sock)
