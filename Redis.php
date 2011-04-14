@@ -28,8 +28,8 @@ class Redis {
 		if ($this->debug) echo sprintf("[Redis] %s\n", $msg);
 	}
 	
-	private function read($len = 1024) {
-		if ($s = fgets ( $this->_sock )) {
+	private function read($len = null) {
+		if ($s = fgets ( $this->_sock, $len )) {
 			$this->debug('Read: '.$s.' ('.strlen($s).' bytes)');
 			return $s;
 		}
@@ -81,9 +81,21 @@ class Redis {
 		}
 	}
 	private function cmd($command) {
-		$this->debug('Command: '.$command);
+		$this->debug('Command: '.(is_array($command)?join(', '.$command):$command));
 		$this->connect ();
-		$s = $command . "\r\n";
+		
+		if (is_array($command)){
+			// Use unified command format
+			
+			$s = '*'.count($command)."\r\n";
+			foreach ($command as $m){
+				$s.='$'.strlen($m)."\r\n";
+				$s.=$m."\r\n";
+			}
+		}
+		else{
+			$s = $command . "\r\n";
+		}
 		while ( $s ) {
 			$i = fwrite ( $this->_sock, $s );
 			if ($i == 0)
@@ -131,7 +143,7 @@ class Redis {
 	 * @return string Status code reply
 	 */
 	function auth($password) {
-		return $this->cmd ( 'AUTH '.$password );
+		return $this->cmd ( array('AUTH',$password) );
 	}
 	
 	////////////////////////////////
@@ -150,7 +162,7 @@ class Redis {
 	 * @return string Status code reply
 	 */
 	function set($key, $value, $preserve = false) {
-		return $this->cmd ( ($preserve ? 'SETNX' : 'SET') . " $key " . strlen ( $value ) . "\r\n$value" );
+		return $this->cmd ( array( ($preserve ? 'SETNX' : 'SET') , $key, $value) );
 	}
 	/**
 	 * return the string value of the key
@@ -179,10 +191,11 @@ class Redis {
 			$key = $args;
 		}
 		if (is_array($key)){
-			return $this->cmd ( "MGET ".join(' ', $key) );
+			array_unshift($key, "MGET");
+			return $this->cmd ( $key );
 		}
 		else{
-			return $this->cmd ( "GET $key" );
+			return $this->cmd ( array("GET", $key));
 		}
 	}
 	function __get($key) {
@@ -209,7 +222,7 @@ class Redis {
 	 * @return string Bulk reply
 	 */
 	function getset($key, $value) {
-		return $this->cmd ( "GETSET $key ".strlen($value)."\r\n".$value );
+		return $this->cmd ( array("GETSET", $key, $value) );
 	}
 	/**
 	 * increment the integer value of key
@@ -229,9 +242,9 @@ class Redis {
 	 */
 	function incr($key, $amount = 1) {
 		if ($amount == 1)
-			return $this->cmd ( "INCR $key" );
+			return $this->cmd ( array("INCR", $key) );
 		else
-			return $this->cmd ( "INCRBY $key $amount" );
+			return $this->cmd ( array("INCRBY",$key,$amount) );
 	}
 	/**
 	 * decrement the integer value of key
@@ -250,9 +263,9 @@ class Redis {
 	 */
 	function decr($key, $amount = 1) {
 		if ($amount == 1)
-			return $this->cmd ( "DECR $key" );
+			return $this->cmd ( array("DECR", $key) );
 		else
-			return $this->cmd ( "DECRBY $key $amount" );
+			return $this->cmd ( array("DECRBY", $key, $amount) );
 	}
 	/**
 	 * test if a key exists
@@ -266,7 +279,10 @@ class Redis {
 	 * @return int
 	 */
 	function exists($key) {
-		return $this->cmd ( "EXISTS $key" );
+		return $this->cmd ( array("EXISTS", $key) );
+	}
+	function __isset($key){
+		return $this->exists($key);
 	}
 	
 	/**
@@ -280,7 +296,10 @@ class Redis {
 	 * @return int
 	 */
 	function delete($key) {
-		return $this->cmd ( "DEL $key" );
+		return $this->cmd ( array("DEL", $key) );
+	}
+	function __unset($key){
+		return $this->delete($key);
 	}
 	/**
 	 * return the type of the value stored at key
@@ -293,7 +312,7 @@ class Redis {
 	 * @return string
 	 */
 	function type($key){
-		return $this->cms ( "TYPE $key" );
+		return $this->cms ( array("TYPE", $key) );
 	}
 	
 	////////////////////////////////
@@ -306,7 +325,7 @@ class Redis {
 	 * @return string space separated list of keys
 	 */
 	function keys($pattern) {
-		return $this->cmd ( "KEYS $pattern" );
+		return $this->cmd ( array("KEYS", $pattern) );
 	}
 	/**
 	 * return a random key from the key space
@@ -330,9 +349,9 @@ class Redis {
 	 */
 	function rename($src, $dst, $preserve = False) {
 		if ($preserve) {
-			return $this->cmd ( "RENAMENX $src $dst" );
+			return $this->cmd ( array("RENAMENX", $src, $dst) );
 		}
-		return $this->cmd ( "RENAME $src $dst" );
+		return $this->cmd ( array("RENAME", $src, $dst) );
 	}
 	/**
 	 * return the number of keys in the current db
@@ -349,7 +368,7 @@ class Redis {
 	 * @return int 1: the timeout was set. | 0: the timeout was not set since the key already has an associated timeout, or the key does not exist.
 	 */
 	function expire($key, $ttl){
-		return $this->cmd ("EXPIRE $key $ttl");
+		return $this->cmd (array("EXPIRE", $key, $ttl));
 	}
 	/**
 	 * get the time to live in seconds of a key
@@ -357,7 +376,7 @@ class Redis {
 	 * @return int
 	 */
 	function ttl($key){
-		return $this->cmd ("TTL $key");
+		return $this->cmd (array("TTL", $key));
 	}
 	
 	////////////////////////////////
