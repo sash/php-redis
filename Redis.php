@@ -792,4 +792,14 @@ class Redis {
 		return $this->cmd ( array("ECHO", $s) );
 	}
 	
+	/**
+	 * Call any non-implemented function of redis using the new unified request protocol
+	 * @param string $name
+	 * @param array $params
+	 */
+	function __call($name, $params){
+		array_unshift($params, strtoupper($name));
+		return $this->cmd($params);
+	}
+	
 }

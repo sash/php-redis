@@ -16,3 +16,12 @@ Quick start
 		
 		# Outputting it
 		echo $r->some_key;
+		
+		# Call any redis method (including methods added in redis 2.*)
+		echo $r->zcard('zkey');
+		
+Changelog
+---------
+1.0 - Initial implementation with all functions implemented up to redis 1.0
+1.1 - The unified request protocol is used (intruduced in redis 1.2). 
+		-	Redis implements the __call magic method. Any non-implemented redis method can be called via ->methodname(param1, ...)
