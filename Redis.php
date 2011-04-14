@@ -394,7 +394,7 @@ class Redis {
 	 */
 	function push($key, $value, $tail = true) {
 		// default is to append the element to the list
-		return $this->cmd ( ($tail ? 'RPUSH' : 'LPUSH') . " $key " . strlen ( $value ) . "\r\n$value" );
+		return $this->cmd ( array($tail ? 'RPUSH' : 'LPUSH',  $key, $value) );
 	}
 	/**
 	 * Return the length of the List value at key
@@ -403,7 +403,7 @@ class Redis {
 	 * @return unknown_type
 	 */
 	function llen($key) {
-		return $this->cmd ( "LLEN $key" );
+		return $this->cmd ( array("LLEN", $key) );
 	}
 	/**
 	 * Return a range of elements from the List at key
@@ -414,7 +414,7 @@ class Redis {
 	 * @return unknown_type
 	 */
 	function lrange($key, $start, $end) {
-		return $this->cmd ( "LRANGE $key $start $end" );
+		return $this->cmd ( array("LRANGE", $key, $start, $end) );
 	}
 	
 	/**
@@ -426,7 +426,7 @@ class Redis {
 	 * @return unknown_type
 	 */
 	function ltrim($key, $start, $end) {
-		return $this->cmd ( "LTRIM $key $start $end" );
+		return $this->cmd ( array("LTRIM", $key, $start, $end) );
 	}
 	/**
 	 * Return the element at index position from the List at key
@@ -436,8 +436,7 @@ class Redis {
 	 * @return unknown_type
 	 */
 	function lindex($key, $index) {
-		return $this->cmd ( "LINDEX $key $index" );
-		return $this->_get_value ();
+		return $this->cmd ( array("LINDEX", $key, $index) );
 	}
 	
 	/**
@@ -449,7 +448,7 @@ class Redis {
 	 * @return unknown_type
 	 */
 	function lset($key, $value, $index) {
-		return $this->cmd ( "LSET $key $index " . strlen ( $value ) . "\r\n$value" );
+		return $this->cmd ( array("LSET", $key, $index, $value) );
 	}
 	/**
 	 * Remove the first-N, last-N, or all the elements matching value from the List at key
@@ -471,7 +470,7 @@ class Redis {
 	 * @return int The number of removed elements if the operation succeeded
 	 */
 	function lrem($key, $value, $count=1) {
-		return $this->cmd ( "LREM $key $count " . strlen ( $value ) . "\r\n$value" );
+		return $this->cmd ( array("LREM", $key, $count, $value) );
 	}
 	
 	/**
@@ -482,7 +481,7 @@ class Redis {
 	 * @return string Bulk reply
 	 */
 	function pop($key, $tail = true) {
-		return $this->cmd ( ($tail ? 'RPOP' : 'LPOP') . " $key" );
+		return $this->cmd ( array($tail ? 'RPOP' : 'LPOP', $key) );
 	}
 	
 	
@@ -498,7 +497,7 @@ class Redis {
 	 * @return unknown_type
 	 */
 	function sadd($key, $value) {
-		return $this->cmd ( "SADD $key " . strlen ( $value ) . "\r\n$value" );
+		return $this->cmd ( array("SADD", $key, $value) );
 	}
 	/**
 	 * Remove the specified member from the Set value at name
@@ -508,7 +507,7 @@ class Redis {
 	 * @return unknown_type
 	 */
 	function srem($key, $value) {
-		return $this->cmd ( "SREM $key " . strlen ( $value ) . "\r\n$value" );
+		return $this->cmd ( array("SREM", $key, $value) );
 	}
 	/**
 	 * Remove and return (pop) a random element from the Set value at key
@@ -516,7 +515,7 @@ class Redis {
 	 * @return string
 	 */
 	function spop($key){
-		return $this->cmd("SPOP $key");
+		return $this->cmd( array("SPOP", $key) );
 	}
 	/**
 	 * Move the specified member from one Set to another atomically
@@ -527,7 +526,7 @@ class Redis {
 	 * @return int 1 if the element was moved | 0 if the element was not found on the first set and no operation was performed
 	 */
 	function smove($srckey, $dstkey, $member){
-		$this->cmd("SMOVE $srckey $dstkey " . strlen ( $member ) . "\r\n$member");
+		$this->cmd(array("SMOVE", $srckey, $dstkey, $member));
 	}
 	/**
 	 * Return the number of elements (the cardinality) of the Set at key
@@ -536,7 +535,7 @@ class Redis {
 	 * @return int
 	 */
 	function scard($key) {
-		return $this->cmd ( "SCARD $key" );
+		return $this->cmd ( array("SCARD", $key) );
 	}
 	
 	/**
@@ -547,7 +546,7 @@ class Redis {
 	 * @return int
 	 */
 	function sismember($key, $value) {
-		return $this->cmd ( "SISMEMBER $key " . strlen ( $value ) . "\r\n$value" );
+		return $this->cmd ( array("SISMEMBER", $key, $value) );
 	}
 	/**
 	 * Return the intersection between the Sets stored at key1, key2, ..., keyN
@@ -562,7 +561,8 @@ class Redis {
 		else{
 			$sets = func_get_args();
 		}
-		return $this->cmd ( 'SINTER ' . implode ( ' ', $sets ) );
+		array_unshift($sets, 'SINTER');
+		return $this->cmd ( $sets );
 	}
 	/**
 	 * Compute the intersection between the Sets stored at key1, key2, ..., keyN, and store the resulting 
@@ -574,12 +574,13 @@ class Redis {
 	function sinterstore($dstkey, $key1) {
 		if (is_array($key1)){
 			$sets = $key1;
+			array_unshift($sets, $dstkey);
 		}
 		else{
 			$sets = func_get_args();
-			array_shift($sets);
 		}
-		return $this->cmd ( 'SINTERSTORE ' . $dstkey . ' ' . implode ( ' ', $sets ) . "" );
+		array_unshift($sets, 'SINTERSTORE');
+		return $this->cmd ( $sets );
 	}
 	/**
 	 * Return the union between the Sets stored at key1, key2, ..., keyN
@@ -594,7 +595,8 @@ class Redis {
 		else{
 			$sets = func_get_args();
 		}
-		return $this->cmd ( 'SUNION ' . implode ( ' ', $sets ) . "" );
+		array_unshift($sets, 'SUNION');
+		return $this->cmd ( $sets );
 	}
 	/**
 	 * Compute the union between the Sets stored at key1, key2, ..., keyN, and store the resulting Set at dstkey
@@ -606,12 +608,13 @@ class Redis {
 	function sunionstore($dstkey, $key1) {
 		if (is_array($key1)){
 			$sets = $key1;
+			array_unshift($sets, $dstkey);
 		}
 		else{
 			$sets = func_get_args();
-			array_shift($sets);
 		}
-		return $this->cmd ( 'SUNIONSTORE ' . $dstkey . ' ' . implode ( ' ', $sets ) . "" );
+		array_unshift($sets, 'SUNIONSTORE');
+		return $this->cmd ( $sets );
 	}
 	/**
 	 * Return the difference between the Set stored at key1 and all the Sets key2, ..., keyN
@@ -626,7 +629,8 @@ class Redis {
 		else{
 			$sets = func_get_args();
 		}
-		return $this->cmd ( 'SDIFF ' . implode ( ' ', $sets ) . "" );
+		array_unshift($sets, 'SDIFF');
+		return $this->cmd ( $sets );
 	}
 	/**
 	 * Compute the difference between the Set key1 and all the Sets key2, ..., keyN, and store the resulting Set at dstkey
@@ -638,12 +642,13 @@ class Redis {
 	function sdiffstore($dstkey, $key1) {
 		if (is_array($key1)){
 			$sets = $key1;
+			array_unshift($sets, $dstkey);
 		}
 		else{
 			$sets = func_get_args();
-			array_shift($sets);
 		}
-		return $this->cmd ( 'SDIFFSTORE ' . $dstkey . ' ' . implode ( ' ', $sets ) . "" );
+		array_unshift($sets, 'SDIFFSTORE');
+		return $this->cmd ( $sets );
 	}
 	/**
 	 * Return all the members of the Set value at key
@@ -652,7 +657,7 @@ class Redis {
 	 * @return array
 	 */
 	function smembers($key) {
-		return $this->cmd ( "SMEMBERS $key" );
+		return $this->cmd ( array("SMEMBERS", $key) );
 	}
 	
 	
@@ -666,7 +671,7 @@ class Redis {
 	 * @return string Status code reply
 	 */
 	function select_db($key) {
-		return $this->cmd ( "SELECT $key" );
+		return $this->cmd ( array("SELECT", $key) );
 	}
 
 	/**
@@ -676,7 +681,7 @@ class Redis {
 	 * @return int 1 if the key was moved | 0 if the key was not moved because already present on the target DB or was not found in the current DB.
 	 */
 	function move($key, $db) {
-		return $this->cmd ( "MOVE $key $db" );
+		return $this->cmd ( array("MOVE", $key, $db) );
 	}
 	/**
 	 * Remove all the keys of the currently selected DB
@@ -705,9 +710,9 @@ class Redis {
 	 */
 	function sort($key, $query = false) {
 		if ($query === false) {
-			return $this->cmd ( "SORT $key" );
+			return $this->cmd ( array("SORT", $key) );
 		} else {
-			return $this->cmd ( "SORT $key $query" );
+			return $this->cmd ( array("SORT", $key, $query) );
 		}
 	}
 	
@@ -774,7 +779,7 @@ class Redis {
 	 * @return string Status code reply
 	 */
 	function slaveof($host=null, $port=6379){
-		return $this->cmd('SLAVEOF '.($host?"$host $port":'no one'));
+		return $this->cmd(array('SLAVEOF', $host?"$host $port":'no one'));
 	}
 	
 	////////////////////////////////
@@ -784,7 +789,7 @@ class Redis {
 		return $this->cmd ( "PING" );
 	}
 	function do_echo($s) {
-		return $this->cmd ( "ECHO " . strlen ( $s ) . "\r\n$s" );
+		return $this->cmd ( array("ECHO", $s) );
 	}
 	
 }
