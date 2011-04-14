@@ -1,5 +1,12 @@
 <?php
 class RedisException extends Exception {}
+/**
+ * Redis database connection class
+ * 
+ * @author sash
+ * @license LGPL
+ * @version 1.1
+ */
 class Redis {
 	private $port;
 	private $host;
