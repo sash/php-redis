@@ -28,8 +28,8 @@ class Redis {
 		if ($this->debug) echo sprintf("[Redis] %s\n", $msg);
 	}
 	
-	private function read($len = null) {
-		if ($s = fgets ( $this->_sock, $len )) {
+	private function read() {
+		if ($s = fgets ( $this->_sock )) {
 			$this->debug('Read: '.$s.' ('.strlen($s).' bytes)');
 			return $s;
 		}
@@ -81,7 +81,7 @@ class Redis {
 		}
 	}
 	private function cmd($command) {
-		$this->debug('Command: '.(is_array($command)?join(', '.$command):$command));
+		$this->debug('Command: '.(is_array($command)?join(', ',$command):$command));
 		$this->connect ();
 		
 		if (is_array($command)){
