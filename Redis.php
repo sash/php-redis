@@ -339,7 +339,7 @@ class Redis {
 	 * @return string
 	 */
 	function type($key){
-		return $this->cms ( array("TYPE", $key) );
+		return $this->cmd ( array("TYPE", $key) );
 	}
 	
 	////////////////////////////////
