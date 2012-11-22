@@ -778,10 +778,15 @@ class Redis {
 	////////////////////////////////
 	/**
 	 * Provide information and statistics about the server
+	 * @param $section
 	 * @return unknown_type
 	 */
-	function info(){
-		return $this->cmd ( "INFO" );
+	function info($section = false){
+		if ($section === false) {
+			return $this->cmd ( "INFO" );
+		} else {
+			return $this->cmd ( array("INFO", $section) );
+		}
 	}
 	
 	/**
